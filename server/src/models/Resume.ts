@@ -11,7 +11,7 @@ const resumeSchema = new Schema<IResume>(
       email:    { type: String },
       phone:    { type: String },
       location: { type: String },
-      linkedin: { type: String },
+      linkedIn: { type: String },
       github:   { type: String },
       summary:  { type: String },
     },

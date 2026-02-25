@@ -69,7 +69,7 @@ export default function PersonalInfo() {
 
       <div className='grid grid-cols-2 gap-3'>
         <input
-          name='linkedin'
+          name='linkedIn'
           value={info.linkedIn}
           onChange={handleChange}
           placeholder='LinkedIn URL'
