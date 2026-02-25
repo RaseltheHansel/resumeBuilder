@@ -2,7 +2,7 @@ import { Request } from "express";
 import { Document, Types } from "mongoose";
 
 //extends express request to include userId added by auth middleware
-export interface authRequest extends Request {
+export interface AuthRequest extends Request {
     userId?: string;
 }
 

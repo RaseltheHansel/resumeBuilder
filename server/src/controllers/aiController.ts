@@ -1,14 +1,16 @@
-import { Response    } from 'express';
+import type { Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai'; 
-import { authRequest } from '../types';
+import type { AuthRequest } from '../types';
 
 
 //initialize gemini with your free api key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? '');
-const model = genAI.getGenerativeModel({model: 'gemini-1.5-flash'});
+console.log('KEY:', process.env.GEMINI_API_KEY);
+
+const model = genAI.getGenerativeModel({model: 'gemini-2.0-flash'});
 
 //generate summary
-export const generateSummary = async (req: authRequest, res: Response): Promise<void> => {
+export const generateSummary = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { name, position, experience, skills }= req.body as Record<string, string>; 
             
@@ -26,7 +28,7 @@ export const generateSummary = async (req: authRequest, res: Response): Promise<
 };
 
 //generate experience bullet points
-export const generateExperience = async (req: authRequest, res: Response): Promise<void> => {
+export const generateExperience = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { position, company, responsibilities, } = req.body as Record<string, string>;
 
@@ -47,7 +49,7 @@ export const generateExperience = async (req: authRequest, res: Response): Promi
 };
 
 //geenerate cover letter 
-export const generateCoverLetter = async (req: authRequest, res: Response): Promise<void> => { 
+export const generateCoverLetter = async (req: AuthRequest, res: Response): Promise<void> => { 
     try {
         const { name, position, company, experience, skills, } = req.body as Record<string, string>;
            
@@ -68,7 +70,7 @@ export const generateCoverLetter = async (req: authRequest, res: Response): Prom
 };
 
 //check ats score
-export const checkATSScore = async (req: authRequest, res: Response): Promise<void> => { 
+export const checkATSScore = async (req: AuthRequest, res: Response): Promise<void> => { 
     try { 
         const { resumeText, jobDescription, } = req.body as Record<string, string>;
            
@@ -84,7 +86,7 @@ export const checkATSScore = async (req: authRequest, res: Response): Promise<vo
         const parsed: { score: number; feedback: string; missingKeywords: string[] } = JSON.parse(clean);
         
         res.json(parsed);
-    } catch (error: unknown) {
+    } catch (error: unknown) {  
         if (error instanceof Error) {
           res.status(500).json({ message: error.message });
         }

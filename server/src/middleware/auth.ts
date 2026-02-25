@@ -1,13 +1,13 @@
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { authRequest } from '../types';
+import { AuthRequest } from '../types';
 
 //define what a jwt patload looks like
 interface JwtPayload {
   id: string;
 }
 
-const verifyToken = (req: authRequest, res: Response, next: NextFunction): void => {
+const verifyToken = (req: AuthRequest, res: Response, next: NextFunction): void => {
 
   //get token from authorization header 
   const token = req.headers.authorization?.split(' ')[1];
