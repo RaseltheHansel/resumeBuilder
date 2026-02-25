@@ -1,4 +1,4 @@
-import { Request } from "express";
+import type { Request } from "express";
 import { Document, Types } from "mongoose";
 
 //extends express request to include userId added by auth middleware

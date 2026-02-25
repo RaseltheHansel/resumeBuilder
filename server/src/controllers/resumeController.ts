@@ -1,6 +1,6 @@
-import { Response } from 'express';
+import type { Response } from 'express';
 import Resume from '../models/Resume';
-import { AuthRequest } from '../types';
+import type { AuthRequest } from '../types';
 
 //get all resumes for logged in user 
 export const getAllResumes = async (req: AuthRequest, res: Response): Promise<void> => {

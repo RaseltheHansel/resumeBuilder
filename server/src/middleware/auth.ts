@@ -1,6 +1,6 @@
-import { Response, NextFunction } from 'express';
+import type { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { AuthRequest } from '../types';
+import type { AuthRequest } from '../types';
 
 //define what a jwt patload looks like
 interface JwtPayload {
