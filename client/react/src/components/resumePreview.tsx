@@ -1,23 +1,84 @@
+import { useState } from 'react';
 import { useResume } from '../context/resumeContext';
+import ReactMarkdown from 'react-markdown';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function ResumePreview() {
   const { resume } = useResume();
   const info = resume.personalInfo;
+  const [downloading, setDownloading] = useState(false);
 
-  const downloadPDF = (): void => {
-    import('html2pdf.js').then((m) => {
+  const downloadPDF = async (): Promise<void> => {
+    if (downloading) return;
+    setDownloading(true);
+
+    try {
       const el = document.getElementById('resume-preview');
-      if (el) m.default().from(el).save('my-resume.pdf');
-    });
+      if (!el) throw new Error('Element not found');
+
+      // Inject temp style to override oklch colors
+      const tempStyle = document.createElement('style');
+      tempStyle.textContent = `
+        *, *::before, *::after {
+          color: inherit !important;
+          background-color: inherit !important;
+          border-color: #e5e7eb !important;
+        }
+        #resume-preview { background-color: #ffffff !important; color: #111111 !important; }
+        #resume-preview h1 { color: #111111 !important; }
+        #resume-preview h2 { color: #2563eb !important; }
+        #resume-preview p { color: #374151 !important; }
+        #resume-preview span { color: #374151 !important; }
+        #resume-preview .text-gray-500 { color: #6b7280 !important; }
+        #resume-preview .text-gray-400 { color: #9ca3af !important; }
+        #resume-preview .text-blue-600 { color: #2563eb !important; }
+        #resume-preview .bg-blue-100 { background-color: #dbeafe !important; }
+        #resume-preview .text-blue-700 { color: #1d4ed8 !important; }
+        #resume-preview .border-blue-600 { border-color: #2563eb !important; }
+      `;
+      document.head.appendChild(tempStyle);
+
+      // Wait for styles to apply
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: el.scrollWidth,
+        height: el.scrollHeight,
+      });
+
+      // Remove temp style after capture
+      document.head.removeChild(tempStyle);
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [canvas.width / 2, canvas.height / 2],
+      });
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`${info.fullName || 'resume'}.pdf`);
+
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+      alert('Failed to download PDF. Please try again.');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
     <div>
       <button
         onClick={downloadPDF}
-        className='mb-4 w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold text-sm'
+        disabled={downloading}
+        className='mb-4 w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white py-2 rounded-lg font-bold text-sm transition-colors'
       >
-        📄 Download PDF
+        {downloading ? '⏳ Generating PDF...' : '📄 Download PDF'}
       </button>
 
       <div id='resume-preview' className='bg-white p-6 shadow text-xs font-sans'>
@@ -28,11 +89,11 @@ export default function ResumePreview() {
             {info.fullName || 'Your Name'}
           </h1>
           <div className='flex flex-wrap gap-3 mt-1 text-gray-600'>
-            {info.email    && <span>📧 {info.email}</span>}
-            {info.phoneNumber  && <span>📞 {info.phoneNumber}</span>}
-            {info.location && <span>📍 {info.location}</span>}
-            {info.linkedIn && <span>🔗 LinkedIn</span>}
-            {info.github   && <span>💻 GitHub</span>}
+            {info.email       && <span>{info.email}</span>}
+            {info.phoneNumber && <span>{info.phoneNumber}</span>}
+            {info.location    && <span>{info.location}</span>}
+            {info.linkedIn    && <a href={info.linkedIn} className='text-blue-600'>LinkedIn</a>}
+            {info.github      && <a href={info.github} className='text-blue-600'>GitHub</a>}
           </div>
         </div>
 
@@ -42,7 +103,9 @@ export default function ResumePreview() {
             <h2 className='text-sm font-bold text-blue-600 uppercase tracking-wider mb-1'>
               Summary
             </h2>
-            <p className='text-gray-700 leading-relaxed'>{info.summary}</p>
+            <div className='text-gray-700 leading-relaxed'>
+              <ReactMarkdown>{info.summary}</ReactMarkdown>
+            </div>
           </div>
         )}
 
@@ -63,9 +126,9 @@ export default function ResumePreview() {
                     {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
                   </span>
                 </div>
-                <p className='mt-1 text-gray-700 whitespace-pre-line'>
-                  {exp.description}
-                </p>
+                <div className='mt-1 text-gray-700'>
+                  <ReactMarkdown>{exp.description}</ReactMarkdown>
+                </div>
               </div>
             ))}
           </div>
@@ -83,9 +146,7 @@ export default function ResumePreview() {
                   <p className='font-bold'>{edu.degree} in {edu.field}</p>
                   <p className='text-gray-500'>{edu.school}</p>
                 </div>
-                <span className='text-gray-400'>
-                  {edu.startDate} - {edu.endDate}
-                </span>
+                <span className='text-gray-400'>{edu.startDate} - {edu.endDate}</span>
               </div>
             ))}
           </div>
